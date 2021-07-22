@@ -16,7 +16,7 @@ exports.getTransactions = async (req,res,next) =>{
     } catch (err) {
         return res.status(500).json({
             success:false,
-            error:'Server Error'
+            error:'Server Error get'
         });
     }
 }
@@ -37,7 +37,19 @@ exports.addTransactions = async(req,res,next) =>{
             data:transaction
     });
     } catch (err) {
-        console.log(err)
+        if(err.name==='ValidationError'){
+            const messages = Object.values(err.errors).map(val =>val.message);
+
+            return res.status(400).json({
+                success:false,
+                error:messages
+            });
+        }else{
+            return res.status(500).json({
+                success:false,
+                error:'Server Error add'
+            });
+        }
     }
 
     
@@ -47,5 +59,27 @@ exports.addTransactions = async(req,res,next) =>{
 // public
 
 exports.deleteTransactions = async(req,res,next) =>{
-    res.send('DELETE transactions');
+    try {
+        const transaction = await Transactions.findById(req.params.id);
+
+        if(!transaction){
+            return res.status(404).json({
+                success:false,
+                error:'No transaction found'
+            });
+        }
+
+        await transaction.remove();
+
+        return res.status(200).json({
+            success:true,
+            date:{}
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            success:false,
+            error:'Server Error delete'
+        });
+    }
 }
